@@ -25,18 +25,26 @@ in recent episodes, open quests, promises made, and what Mara knows. A secret ma
 is left out of Mara's recap, so the AI can't use knowledge its character couldn't have.
 `recap` with no name is the narrator's view and shows everything.
 
+## Try it in 10 seconds
+    sh examples/salt_road.sh        # a two-episode story: prints Mara's recap (no secret) and the narrator's (secret shown)
+
+## Writing the end-of-episode summary
+The summary is the memory that matters most. `episodekeep draft-summary` prints everything logged in the open episode plus
+instructions; paste it into any AI, read what it writes, fix it, then `episodekeep end "…"`. Episodekeep never calls an AI itself.
+Through MCP the AI can call `draft_summary` and `end_episode` on its own.
+
 ## Let the AI keep the notes itself (MCP)
 
 Claude Desktop and other MCP apps can run it as a tool server. In the app's MCP config:
 
     {"mcpServers": {"episodekeep": {"command": "episodekeep", "args": ["--db", "/full/path/story.db", "mcp"]}}}
 
-Tools: recap, start_episode, end_episode, log, add_quest, update_quest, character, search.
+Tools: recap, start_episode, end_episode, draft_summary, log, add_quest, update_quest, character, search.
 The AI can write things down as it plays and ask for the recap when a session starts.
 
 ## Commands
 init, character, start, end, quest, quest-set (open, done, failed, dormant), log (event, fact, promise, secret, relationship),
-search, recap, export (the whole story as markdown), mcp.
+search, recap, export (the whole story as markdown), episodes, quests, characters (lists), draft-summary, mcp, --version.
 
 ## What it is not
 It stores what you or the AI write down; it does not read your chat and it does not decide what matters.

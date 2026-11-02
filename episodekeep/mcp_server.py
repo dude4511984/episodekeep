@@ -17,6 +17,7 @@ TOOLS = {
                      dict(S(title=STR, status={"type": "string", "enum": list(QUEST_STATUS)}, description=STR), required=["title"])),
     "character": ("Add or change a character. kind pc = the one the AI plays.",
                   dict(S(name=STR, kind={"type": "string", "enum": ["pc", "npc"]}, sheet=STR, voice=STR), required=["name"])),
+    "draft_summary": ("Get the open episode's logged events with instructions for writing its end-of-episode summary. Then call end_episode with your summary.", S()),
     "search": ("Search what has been written down.", dict(S(query=STR), required=["query"])),
 }
 
@@ -29,6 +30,7 @@ def call(st, name, a):
     if name == "add_quest": st.add_quest(a["title"], a.get("description", "")); return "quest added"
     if name == "update_quest": st.update_quest(a["title"], a.get("status"), a.get("description")); return "quest updated"
     if name == "character": st.upsert_character(a["name"], a.get("kind"), a.get("sheet"), a.get("voice")); return "saved"
+    if name == "draft_summary": return st.draft_summary_prompt()
     if name == "search": return "\n".join(f"ep {e['episode']} [{e['kind']}] {e['text']}" for e in st.search(a["query"])) or "nothing found"
     raise StoryError("unknown tool " + name)
 
@@ -39,7 +41,7 @@ def handle(st, msg):
         return None                                   # notifications get no reply
     if method == "initialize":
         res = {"protocolVersion": params.get("protocolVersion", "2024-11-05"), "capabilities": {"tools": {}},
-               "serverInfo": {"name": "episodekeep", "version": "0.1.0"}}
+               "serverInfo": {"name": "episodekeep", "version": "0.1.1"}}
     elif method == "tools/list":
         res = {"tools": [{"name": n, "description": d, "inputSchema": sch} for n, (d, sch) in TOOLS.items()]}
     elif method == "tools/call":

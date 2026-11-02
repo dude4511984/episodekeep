@@ -209,5 +209,22 @@ class Story:
         out.append(f"\n## Now\nEpisode {ep['number']}{': ' + ep['title'] if ep['title'] else ''} is in progress." if ep else "\n## Now\nBetween episodes.")
         return "\n".join(out).strip() + "\n"
 
+    def episode_list(self):
+        return [dict(r) for r in self.db.execute("SELECT * FROM episodes ORDER BY number")]
+
+    def draft_summary_prompt(self):
+        """Everything logged in the open episode plus an instruction, to paste into an AI so it drafts the summary. Calls no AI itself."""
+        ep = self.current_episode()
+        if not ep:
+            raise StoryError("no open episode")
+        evs = [dict(r) for r in self.db.execute("SELECT * FROM events WHERE episode=? ORDER BY id", (ep["number"],))]
+        if not evs:
+            raise StoryError("nothing logged in this episode yet; log what happened first")
+        lines = [f"- [{e['kind']}] {e['text']}" + (f" (known by: {e['known_by']})" if e["known_by"] else "") for e in evs]
+        return ("Write the end-of-episode summary for episode %d%s of \"%s\". 3 to 6 sentences, past tense, plain words. Keep names, "
+                "promises, open quests and anything a character will need to remember next time. Do not reveal secrets to characters who do not "
+                "know them; if a secret matters, say only that it exists. Use only what is below; invent nothing.\n\nWhat was logged:\n%s\n"
+                % (ep["number"], ": " + ep["title"] if ep["title"] else "", self.meta("title") or "this series", "\n".join(lines)))
+
     def export_markdown(self):
         return self.recap(None, episodes=10**6, events=10**6)

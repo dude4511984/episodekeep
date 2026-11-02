@@ -1,10 +1,12 @@
 """episodekeep command line. The story lives in one file (story.db in the current folder, or $EPISODEKEEP_DB or --db)."""
 import argparse, sys
+from . import __version__
 from .db import Story, StoryError, KINDS, QUEST_STATUS
 
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="episodekeep", description="Keep a multi-episode story straight for the AI that plays your character.")
+    p.add_argument("--version", action="version", version="episodekeep " + __version__)
     p.add_argument("--db", help="story file (default: story.db, or $EPISODEKEEP_DB)")
     s = p.add_subparsers(dest="cmd", required=True)
     a = s.add_parser("init", help="start a new series"); a.add_argument("title"); a.add_argument("--premise", default="")
@@ -18,6 +20,8 @@ def main(argv=None):
     a.add_argument("--quest", default=""); a.add_argument("--known-by", default="", help="comma list; only they know (secrets)")
     a = s.add_parser("search"); a.add_argument("query")
     a = s.add_parser("recap", help="print the context block to paste into an AI"); a.add_argument("--as", dest="who"); a.add_argument("--episodes", type=int, default=3)
+    s.add_parser("episodes", help="list episodes"); s.add_parser("quests", help="list quests"); s.add_parser("characters", help="list the cast")
+    s.add_parser("draft-summary", help="print a prompt that asks an AI to draft the end-of-episode summary (calls no AI itself)")
     s.add_parser("export", help="the whole story as markdown")
     s.add_parser("mcp", help="run as an MCP server over stdio (for Claude Desktop and other AI apps)")
     a = p.parse_args(argv)
@@ -44,6 +48,14 @@ def main(argv=None):
             for e in st.search(a.query): print(f"ep {e['episode']} [{e['kind']}] {e['text']}")
         elif a.cmd == "recap":
             sys.stdout.write(st.recap(a.who, a.episodes))
+        elif a.cmd == "episodes":
+            for e in st.episode_list(): print(f"{e['number']}. {e['title'] or '(untitled)'} [{e['status']}]" + (f": {e['summary']}" if e["summary"] else ""))
+        elif a.cmd == "quests":
+            for q in st.quests(): print(f"[{q['status']}] {q['title']}" + (f": {q['description']}" if q["description"] else ""))
+        elif a.cmd == "characters":
+            for c in st.characters(): print(f"{c['name']} ({c['kind']}): {c['sheet']}")
+        elif a.cmd == "draft-summary":
+            sys.stdout.write(st.draft_summary_prompt())
         elif a.cmd == "export":
             sys.stdout.write(st.export_markdown())
     except StoryError as e:

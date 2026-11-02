@@ -3,7 +3,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "episodekeep"
-version = "0.1.0"
+version = "0.1.1"
 description = "Keeps a multi-episode story and its quests straight for the AI that plays your character."
 readme = "README.md"
 requires-python = ">=3.9"

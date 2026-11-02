@@ -57,6 +57,34 @@ class Core(unittest.TestCase):
         self.assertIn("The caravan reached the dunes", Story(p).recap("Mara"))
 
 
+class Polish(unittest.TestCase):
+    def test_draft_summary_prompt(self):
+        st = seeded(); p = st.draft_summary_prompt()
+        self.assertIn("The Crossing", p); self.assertIn("The caravan reached the dunes", p); self.assertIn("invent nothing", p)
+        self.assertIn("known by: Vell, Narrator", p)
+        st2 = fresh()
+        with self.assertRaises(StoryError): st2.draft_summary_prompt()          # no open episode
+        st2.start_episode("x")
+        with self.assertRaises(StoryError): st2.draft_summary_prompt()          # nothing logged
+
+    def test_list_commands_and_version(self):
+        d = tempfile.mkdtemp(); db = os.path.join(d, "s.db"); env = dict(os.environ, PYTHONPATH=str(Path(__file__).resolve().parent.parent))
+        run = lambda *a: subprocess.run([sys.executable, "-m", "episodekeep", "--db", db, *a], capture_output=True, text=True, env=env, timeout=30)
+        self.assertIn("episodekeep 0.1.1", run("--version").stdout)
+        for a in (("init", "T"), ("character", "Mara", "--pc", "--sheet", "Guard"), ("start", "One"), ("quest", "Find it"), ("log", "hi")): run(*a)
+        self.assertIn("Mara (pc): Guard", run("characters").stdout); self.assertIn("[open] Find it", run("quests").stdout)
+        self.assertIn("1. One [open]", run("episodes").stdout); self.assertIn("- [event] hi", run("draft-summary").stdout)
+
+    def test_example_script_runs(self):
+        env = dict(os.environ, PYTHONPATH=str(Path(__file__).resolve().parent.parent), TMPDIR=tempfile.mkdtemp())
+        r = subprocess.run(["sh", str(Path(__file__).resolve().parent.parent / "examples" / "salt_road.sh")], capture_output=True, text=True, env=env,
+                           cwd=str(Path(__file__).resolve().parent.parent), timeout=60)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        head, narrator = r.stdout.split("=== the narrator's view")
+        mara = head.split("=== what Mara is told (no secret) ===")[1]
+        self.assertNotIn("Vell lied", mara); self.assertIn("Vell lied", narrator)
+
+
 class Mcp(unittest.TestCase):
     def rpc(self, st, method, params=None, mid=1):
         return mcp_server.handle(st, {"jsonrpc": "2.0", "id": mid, "method": method, "params": params or {}})
@@ -65,7 +93,7 @@ class Mcp(unittest.TestCase):
         st = seeded()
         self.assertEqual(self.rpc(st, "initialize")["result"]["serverInfo"]["name"], "episodekeep")
         self.assertIsNone(mcp_server.handle(st, {"jsonrpc": "2.0", "method": "notifications/initialized"}))
-        self.assertEqual(len(self.rpc(st, "tools/list")["result"]["tools"]), 8)
+        self.assertEqual(len(self.rpc(st, "tools/list")["result"]["tools"]), 9)
         r = self.rpc(st, "tools/call", {"name": "recap", "arguments": {"as": "Mara"}})["result"]
         self.assertFalse(r["isError"]); self.assertIn("You are Mara", r["content"][0]["text"])
         e = self.rpc(st, "tools/call", {"name": "log", "arguments": {"text": "x", "kind": "bogus"}})["result"]
