@@ -41,7 +41,7 @@ def handle(st, msg):
         return None                                   # notifications get no reply
     if method == "initialize":
         res = {"protocolVersion": params.get("protocolVersion", "2024-11-05"), "capabilities": {"tools": {}},
-               "serverInfo": {"name": "episodekeep", "version": "0.1.1"}}
+               "serverInfo": {"name": "episodekeep", "version": "0.2.0"}}
     elif method == "tools/list":
         res = {"tools": [{"name": n, "description": d, "inputSchema": sch} for n, (d, sch) in TOOLS.items()]}
     elif method == "tools/call":

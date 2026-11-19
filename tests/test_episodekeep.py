@@ -70,7 +70,7 @@ class Polish(unittest.TestCase):
     def test_list_commands_and_version(self):
         d = tempfile.mkdtemp(); db = os.path.join(d, "s.db"); env = dict(os.environ, PYTHONPATH=str(Path(__file__).resolve().parent.parent))
         run = lambda *a: subprocess.run([sys.executable, "-m", "episodekeep", "--db", db, *a], capture_output=True, text=True, env=env, timeout=30)
-        self.assertIn("episodekeep 0.1.1", run("--version").stdout)
+        self.assertIn("episodekeep 0.2.0", run("--version").stdout)
         for a in (("init", "T"), ("character", "Mara", "--pc", "--sheet", "Guard"), ("start", "One"), ("quest", "Find it"), ("log", "hi")): run(*a)
         self.assertIn("Mara (pc): Guard", run("characters").stdout); self.assertIn("[open] Find it", run("quests").stdout)
         self.assertIn("1. One [open]", run("episodes").stdout); self.assertIn("- [event] hi", run("draft-summary").stdout)
