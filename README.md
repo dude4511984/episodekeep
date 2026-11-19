@@ -52,3 +52,19 @@ Summaries (`end`) are the memory that matters most: write them well. Nothing lea
 Keep `story.db` somewhere you back up. Tests: `python3 -m unittest discover -s tests`.
 
 License: Apache-2.0. Made by Every Synthetic, Mena, Arkansas.
+
+## Studio mode: one journal entry to one episode (optional)
+
+A consent-gated layer for turning a journal entry you choose into an episode, with you approving every step. Same `story.db`,
+standard library only, and it calls no AI. Entries start private; layers are `real_life`, `live_action`, `fantasy`; permissions are
+`private`, `studio_draft`, `approved_canon`, `audience_safe`. Only what you release reaches a prompt, a recap or an export, and
+revoking an entry pulls everything linked to it back out.
+
+    sh examples/grocery_run.sh                      # the whole walkthrough, with the gates shown
+    python3 -m episodekeep.studio_cli import "My day" --text -     # entry stays private
+    python3 -m episodekeep.studio_cli permit 1 studio_draft        # you authorise it
+    python3 -m episodekeep.studio_cli prompt writer --source 1     # paste into any AI
+    python3 -m episodekeep.studio_cli draft outline --source 1 --text "..." ; ... approve 1 ; ... package
+
+Connect only `studio mcp` to an AI app (it cannot import, approve, revoke or export). The plain `episodekeep` commands and
+`episodekeep mcp` have no gate, so do not point an AI app at the same `story.db` through them.
